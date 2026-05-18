@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>对话质量分类 - 演示</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, "Microsoft YaHei", sans-serif; background: #f5f7fa; color: #333; }
+.header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; }
+.header h1 { font-size: 28px; margin-bottom: 8px; }
+.header p { opacity: 0.85; font-size: 14px; }
+.container { max-width: 900px; margin: 30px auto; padding: 0 20px; }
+.card { background: white; border-radius: 12px; padding: 24px; margin-bottom: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+.card h2 { font-size: 18px; margin-bottom: 16px; color: #333; }
+.row { display: flex; gap: 16px; margin-bottom: 16px; }
+.row > div { flex: 1; }
+label { display: block; font-size: 13px; font-weight: 600; color: #666; margin-bottom: 6px; }
+textarea {
+  width: 100%; height: 100px; border: 1px solid #ddd; border-radius: 8px;
+  padding: 12px; font-size: 14px; resize: vertical; font-family: inherit;
+}
+textarea:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,0.15); }
+.btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;
+  border: none; padding: 12px 32px; border-radius: 8px; font-size: 15px;
+  cursor: pointer; font-weight: 600; transition: transform 0.1s;
+}
+.btn:hover { transform: scale(1.02); }
+.btn:active { transform: scale(0.98); }
+.result { margin-top: 16px; padding: 16px; border-radius: 8px; font-size: 14px; display: none; }
+.result.useful { background: #e8f5e9; border: 1px solid #a5d6a7; display: block; }
+.result.useless { background: #fce4ec; border: 1px solid #ef9a9a; display: block; }
+.result .label { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+.result .conf { font-size: 14px; color: #666; }
+.result .top { margin-top: 10px; font-size: 13px; color: #888; }
+.bar { display: inline-block; height: 16px; border-radius: 4px; vertical-align: middle; margin: 0 8px; }
+.status { text-align: center; font-size: 13px; color: #999; padding: 8px; }
+.status.ok { color: #4caf50; }
+.status.off { color: #f44336; }
+.presets { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.preset {
+  padding: 6px 14px; border: 1px solid #ddd; border-radius: 20px; font-size: 13px;
+  cursor: pointer; background: white; transition: all 0.15s;
+}
+.preset:hover { border-color: #667eea; background: #f0f2ff; }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>对话质量分类系统</h1>
+  <p>基于 RoBERTa-wwm-ext · F1 85.6% · PyTorch + FastAPI + Docker</p>
+</div>
+<div class="container">
+  <div class="status" id="status">正在检测 API 状态...</div>
+
+  <div class="card">
+    <h2>快速测试</h2>
+    <div class="row">
+      <div>
+        <label>用户消息</label>
+        <textarea id="userInput" placeholder="输入用户的问题...">Redis 适合用在什么场景？</textarea>
+      </div>
+      <div>
+        <label>助手回复</label>
+        <textarea id="assistantInput" placeholder="输入 AI 助手的回复...">Redis 可以用来做缓存、消息队列、会话管理、实时排行榜、分布式锁等。性能极高，支持多种数据结构。</textarea>
+      </div>
+    </div>
+    <button class="btn" onclick="predict()">分析质量</button>
+    <div class="result" id="result"></div>
+    <div class="presets">
+      <span style="font-size:13px;color:#999;line-height:2;">预设示例：</span>
+      <button class="preset" onclick="setPreset('useful')">专业回答 ✅</button>
+      <button class="preset" onclick="setPreset('useless')">敷衍回答 ❌</button>
+      <button class="preset" onclick="setPreset('wrong')">事实错误 ❌</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = 'http://localhost:8000';
+
+async function checkHealth() {
+  try {
+    const r = await fetch(API + '/health');
+    if (r.ok) {
+      document.getElementById('status').innerHTML = 'API 服务已连接 · 模型就绪 · CPU 推理';
+      document.getElementById('status').className = 'status ok';
+    }
+  } catch(e) {
+    document.getElementById('status').innerHTML = 'API 服务未连接，请先运行 start_all.bat';
+    document.getElementById('status').className = 'status off';
+  }
+}
+
+async function predict() {
+  const user = document.getElementById('userInput').value.trim();
+  const assistant = document.getElementById('assistantInput').value.trim();
+  if (!user || !assistant) return alert('请填写用户消息和助手回复');
+
+  const text = '用户: ' + user + '\n助手: ' + assistant;
+  document.getElementById('result').style.display = 'none';
+  document.getElementById('result').className = 'result';
+
+  try {
+    const r = await fetch(API + '/predict', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({text: text})
+    });
+    const data = await r.json();
+    const cls = data.label === 'useful' ? 'useful' : 'useless';
+    const emoji = data.label === 'useful' ? '✅' : '❌';
+    const labelCN = data.label === 'useful' ? '有用' : '无用';
+
+    document.getElementById('result').className = 'result ' + cls;
+    document.getElementById('result').innerHTML =
+      '<div class="label">' + emoji + ' ' + labelCN + '</div>' +
+      '<div class="conf">置信度: ' + (data.confidence * 100).toFixed(1) + '%</div>' +
+      '<div class="top">' +
+        data.top_k.map(k =>
+          '<span>' + (k.label === 'useful' ? '有用' : '无用') + ': ' + (k.probability * 100).toFixed(1) + '%</span>' +
+          '<span class="bar" style="width:' + (k.probability * 120) + 'px;background:' + (k.label === 'useful' ? '#66bb6a' : '#ef5350') + '"></span>'
+        ).join('&nbsp;&nbsp;') +
+      '</div>';
+  } catch(e) {
+    alert('请求失败，请确认 API 服务已启动 (start_all.bat)');
+  }
+}
+
+function setPreset(type) {
+  if (type === 'useful') {
+    document.getElementById('userInput').value = 'Python 装饰器的原理是什么？';
+    document.getElementById('assistantInput').value = '装饰器本质是接受函数作为参数并返回新函数的高阶函数。@decorator 语法是 func = decorator(func) 的语法糖。常用于日志记录、权限校验、缓存、性能计时等横切关注点，使代码更简洁。';
+  } else if (type === 'useless') {
+    document.getElementById('userInput').value = '什么是面向对象编程？';
+    document.getElementById('assistantInput').value = '面向对象就是面向对象嘛，它是一种编程思想，嗯...有三四个特征吧，主要是封装、继承什么的。反正现在大家都在用，你学学就知道了。';
+  } else {
+    document.getElementById('userInput').value = '太阳系中最大的行星是什么？';
+    document.getElementById('assistantInput').value = '太阳系最大的行星是地球。地球的直径大约是 12,742 公里，是太阳系中最大的行星。';
+  }
+}
+
+checkHealth();
+</script>
+</body>
+</html>
