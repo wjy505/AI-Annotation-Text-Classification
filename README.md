@@ -58,13 +58,30 @@ python train.py --data cls.jsonl --epochs 5 --batch-size 16 --no-cuda
 python api_server.py --port 8000
 ```
 
+### LabelStudio ML Backend（模型预标注）
+
+```bash
+# 启动 ML Backend
+python ml_backend.py --port 9090
+
+# 在 LabelStudio 中对接
+浏览器 http://localhost:8080 → Settings → Machine Learning → Add Model
+→ URL 填 http://localhost:9090
+→ 勾选 "Use for interactive preannotations"
+→ 标注时模型自动预测，人工只需审核修正
+```
+
 ### Docker 部署
 
 ```bash
 docker build -t dialog-classifier .
 docker run -d -p 8000:8000 --name dialog-api dialog-classifier
-# 全栈
+
+# 全栈（API + LabelStudio）
 docker-compose up -d
+
+# 启用 ML Backend
+docker-compose --profile ml up -d
 ```
 
 ## 项目结构

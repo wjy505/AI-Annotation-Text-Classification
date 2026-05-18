@@ -1,6 +1,7 @@
 # docker-compose.yml — 对话质量分类全栈部署
 # 启动: docker-compose up -d
 # 停止: docker-compose down
+# 查看: docker-compose ps
 
 version: "3.8"
 
@@ -10,6 +11,7 @@ services:
     build: .
     image: dialog-classifier:latest
     container_name: dialog-api
+    command: ["python", "api_server.py", "--host", "0.0.0.0", "--port", "8000"]
     ports:
       - "8000:8000"
     environment:
@@ -21,7 +23,26 @@ services:
       timeout: 3s
       retries: 3
 
-  # ── LabelStudio 标注平台（可选）──
+  # ── ML Backend 预标注服务 ──
+  ml-backend:
+    build: .
+    image: dialog-classifier:latest
+    container_name: dialog-ml-backend
+    command: ["python", "ml_backend.py", "--host", "0.0.0.0", "--port", "9090"]
+    ports:
+      - "9090:9090"
+    environment:
+      - HF_ENDPOINT=https://hf-mirror.com
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9090/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+    profiles:
+      - ml  # 默认不启动，用 --profile ml 启用
+
+  # ── LabelStudio 标注平台 ──
   label-studio:
     image: heartexlabs/label-studio:latest
     container_name: label-studio
@@ -29,7 +50,6 @@ services:
       - "8080:8080"
     volumes:
       - ./label-studio-data:/label-studio/data
-      - ./labeling_config.xml:/label-studio/config.xml  # 启动后手动导入
     environment:
       - LABEL_STUDIO_LOCAL_FILES_SERVING_ENABLED=true
       - LABEL_STUDIO_LOCAL_FILES_DOCUMENT_ROOT=/label-studio/files

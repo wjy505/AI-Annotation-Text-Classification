@@ -26,6 +26,7 @@ RUN pip install --no-cache-dir \
 
 # 复制代码和模型
 COPY api_server.py .
+COPY ml_backend.py .
 COPY checkpoints/best_model/ ./checkpoints/best_model/
 
 # 健康检查

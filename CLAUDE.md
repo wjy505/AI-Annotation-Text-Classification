@@ -18,8 +18,9 @@
 | `predict.py` | 分类推理脚本（单条/批量） |
 | `bootstrap_data.py` | 原始对话 → LabelStudio 导入格式转换 |
 | `api_server.py` | FastAPI 推理服务（单条/批量预测） |
+| `ml_backend.py` | LabelStudio ML Backend 预标注服务 |
 | `Dockerfile` | API 服务镜像构建 |
-| `docker-compose.yml` | 全栈部署（API + LabelStudio） |
+| `docker-compose.yml` | 全栈部署（API + ML Backend + LabelStudio） |
 | `requirements.txt` | Python 依赖清单（torch, transformers, sklearn） |
 | `devlog/` | 每日开发日志目录 |
 | `devlog/YYYY-MM-DD.md` | 当日开发日志（按日期命名） |
