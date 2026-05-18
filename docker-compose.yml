@@ -1,0 +1,36 @@
+# docker-compose.yml — 对话质量分类全栈部署
+# 启动: docker-compose up -d
+# 停止: docker-compose down
+
+version: "3.8"
+
+services:
+  # ── 推理 API ──
+  api:
+    build: .
+    image: dialog-classifier:latest
+    container_name: dialog-api
+    ports:
+      - "8000:8000"
+    environment:
+      - HF_ENDPOINT=https://hf-mirror.com
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+  # ── LabelStudio 标注平台（可选）──
+  label-studio:
+    image: heartexlabs/label-studio:latest
+    container_name: label-studio
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./label-studio-data:/label-studio/data
+      - ./labeling_config.xml:/label-studio/config.xml  # 启动后手动导入
+    environment:
+      - LABEL_STUDIO_LOCAL_FILES_SERVING_ENABLED=true
+      - LABEL_STUDIO_LOCAL_FILES_DOCUMENT_ROOT=/label-studio/files
+    restart: unless-stopped

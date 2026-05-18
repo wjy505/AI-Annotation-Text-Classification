@@ -1,0 +1,16 @@
+venv/
+ls_venv/
+venv_clean/
+__pycache__/
+*.pyc
+.env
+checkpoints/
+*.jsonl
+!sample_conversations.json
+annotations.json
+export.json
+label-studio-data/
+.claude/
+Docker Desktop Installer.exe
+ground_truth.json
+ls_import_batch.json

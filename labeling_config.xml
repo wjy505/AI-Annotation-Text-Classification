@@ -1,0 +1,29 @@
+<View>
+  <Header value="对话文本标注"/>
+
+  <View style="display:flex;gap:16px">
+    <View style="flex:1;padding:12px;background:#f0f4ff;border-radius:8px">
+      <Header value="用户消息 (user)"/>
+      <Text name="user_msg" value="$user"/>
+    </View>
+    <View style="flex:1;padding:12px;background:#f4fff0;border-radius:8px">
+      <Header value="助手回复 (assistant)"/>
+      <Text name="assistant_msg" value="$assistant"/>
+    </View>
+  </View>
+
+  <View style="margin-top:20px">
+    <Header value="质量判断"/>
+    <Choices name="usefulness" toName="user_msg" choice="single-radio" required="true">
+      <Choice value="useful" alias="有用"/>
+      <Choice value="useless" alias="无用"/>
+    </Choices>
+  </View>
+
+  <View style="margin-top:20px">
+    <Header value="错误类型（如标注为无用，请填写）"/>
+    <TextArea name="error_type" toName="user_msg"
+              placeholder="事实错误、逻辑矛盾、不相关、格式错误..."
+              rows="3"/>
+  </View>
+</View>

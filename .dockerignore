@@ -1,0 +1,16 @@
+venv/
+ls_venv/
+venv_clean/
+__pycache__/
+*.pyc
+.git/
+*.jsonl
+!sample_conversations.json
+*.json
+!sample_conversations.json
+label-studio-data/
+devlog/
+docs/
+checkpoints/checkpoint-*
+*.md
+.env
