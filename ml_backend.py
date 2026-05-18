@@ -137,7 +137,7 @@ def build_annotation(label: str, confidence: float):
 def health():
     return {"status": "up", "model_version": MODEL_VERSION, "device": device}
 
-@app.get("/setup")
+@app.api_route("/setup", methods=["GET", "POST"])
 def setup():
     """返回模型支持的标注类型，供 LabelStudio 自动匹配。"""
     return {

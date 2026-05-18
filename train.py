@@ -221,9 +221,23 @@ def main():
     ))
 
     # ── 保存模型 ──
+    import shutil
     save_path = os.path.join(args.output, "best_model")
+    if os.path.exists(save_path):
+        shutil.rmtree(save_path, ignore_errors=True)
     os.makedirs(save_path, exist_ok=True)
-    trainer.save_model(save_path)
+    try:
+        trainer.save_model(save_path)
+    except Exception:
+        # Windows 文件锁定回退：直接从 checkpoint 复制最佳模型
+        best_ckpt = trainer.state.best_model_checkpoint
+        if best_ckpt and os.path.isdir(best_ckpt):
+            for fn in os.listdir(best_ckpt):
+                src = os.path.join(best_ckpt, fn)
+                dst = os.path.join(save_path, fn)
+                if os.path.isfile(src):
+                    import shutil as _shutil
+                    _shutil.copy2(src, dst)
     tokenizer.save_pretrained(save_path)
     print(f"\n  最佳模型已保存至: {save_path}")
 
