@@ -115,6 +115,7 @@ def build_annotation(label: str, confidence: float):
     }
     """
     return {
+        "model_version": MODEL_VERSION,
         "result": [
             {
                 "from_name": FROM_NAME_CHOICES,
@@ -161,6 +162,9 @@ async def predict_endpoint(request: Request):
       {"results": [{"id": 1, "result": [...], "score": 0.85}, ...]}
     """
     body = await request.json()
+    logger.info(f"收到预测请求: {len(body.get('tasks', []))} 个任务")
+    if body.get("tasks"):
+        logger.info(f"  首个任务: {json.dumps(body['tasks'][0], ensure_ascii=False)}")
     tasks = body.get("tasks", [])
 
     results = []

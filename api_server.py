@@ -73,6 +73,15 @@ app = FastAPI(
     version="1.0.0",
 )
 
+# ─── 演示页面 ───
+import pathlib
+
+@app.get("/demo")
+def demo():
+    demo_html = pathlib.Path(__file__).parent / "demo.html"
+    from fastapi.responses import HTMLResponse
+    return HTMLResponse(demo_html.read_text(encoding="utf-8"))
+
 # ─── 请求/响应模型 ───
 
 class PredictRequest(BaseModel):
