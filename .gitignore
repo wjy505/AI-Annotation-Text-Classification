@@ -11,6 +11,9 @@ annotations.json
 export.json
 label-studio-data/
 .claude/
+.idea/
 Docker Desktop Installer.exe
 ground_truth.json
 ls_import_batch.json
+test_prelabel.json
+新标注.json
